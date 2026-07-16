@@ -1,364 +1,163 @@
-from pathlib import Path
-
-html = r'''<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Deep Time Timer</title>
-
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #090b10;
-      --panel: #131722;
-      --border: #2a3140;
-      --text: #f4f7ff;
-      --muted: #9099aa;
-      --accent: #7c9cff;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, system-ui, sans-serif;
-    }
-
-    .app {
-      width: min(720px, 100%);
-      padding: 28px;
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      background: var(--panel);
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 1.4rem;
-    }
-
-    .description {
-      margin: 0 0 28px;
-      color: var(--muted);
-    }
-
-    .timer {
-      min-height: 120px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 28px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      background: #080a0f;
-    }
-
-    #display {
-      max-width: 100%;
-      padding: 20px;
-      overflow-x: auto;
-      white-space: nowrap;
-      font-family: "Courier New", monospace;
-      font-size: clamp(2.2rem, 9vw, 5rem);
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.04em;
-    }
-
-    #deepDigits {
-      color: var(--accent);
-    }
-
-    .controls {
-      display: grid;
-      gap: 20px;
-    }
-
-    .time-inputs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    label {
-      display: grid;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    input[type="number"] {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #0b0e15;
-      color: var(--text);
-      font: inherit;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 12px;
-    }
-
-    button {
-      flex: 1;
-      padding: 12px 18px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #1a2030;
-      color: var(--text);
-      font: inherit;
-      cursor: pointer;
-    }
-
-    button.primary {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: #081020;
-      font-weight: 700;
-    }
-
-    .knob-section {
-      display: grid;
-      gap: 12px;
-      padding-top: 4px;
-    }
-
-    .knob-label {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    #depthValue {
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent);
-      cursor: grab;
-    }
-
-    .hint {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    @media (max-width: 520px) {
-      .app {
-        padding: 20px;
-      }
-
-      .buttons,
-      .time-inputs {
-        grid-template-columns: 1fr;
-      }
-
-      .buttons {
-        flex-direction: column;
-      }
-    }
+    :root { color-scheme: dark; --bg:#090b10; --panel:#141925; --line:#30394c; --text:#f3f6ff; --muted:#a8b1c3; --accent:#8ea8ff; }
+    * { box-sizing: border-box; }
+    body { min-height:100vh; margin:0; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 30% 0%, #1b2440, var(--bg) 48%); color:var(--text); font-family:Inter, ui-sans-serif, system-ui, sans-serif; }
+    main { width:min(720px,100%); padding:clamp(20px,5vw,36px); border:1px solid var(--line); border-radius:24px; background:color-mix(in srgb, var(--panel) 94%, black); box-shadow:0 24px 80px #0008; }
+    h1 { margin:0 0 8px; font-size:clamp(1.45rem,4vw,2rem); }
+    .intro, .hint { margin:0; color:var(--muted); line-height:1.5; }
+    .timer { margin:28px 0; padding:clamp(20px,6vw,42px) 16px; overflow-x:auto; border:1px solid var(--line); border-radius:18px; background:#07090e; text-align:center; }
+    #display { white-space:nowrap; font-family:"SFMono-Regular", Consolas, monospace; font-size:clamp(2.25rem,10vw,5.75rem); font-variant-numeric:tabular-nums; letter-spacing:.035em; }
+    #deepDigits { color:var(--accent); text-shadow:0 0 22px #8ea8ff66; }
+    .legend { margin-top:13px; color:var(--muted); font-size:.8rem; letter-spacing:.06em; text-align:center; }
+    .controls { display:grid; gap:20px; }
+    .time-inputs { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    label { display:grid; gap:7px; color:var(--muted); font-size:.9rem; }
+    input[type=number] { width:100%; padding:12px 13px; border:1px solid var(--line); border-radius:10px; background:#0b0f18; color:var(--text); font:inherit; }
+    .buttons { display:flex; gap:12px; }
+    button { flex:1; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:#20283a; color:var(--text); font:inherit; cursor:pointer; }
+    button:hover { border-color:var(--accent); }
+    button.primary { border-color:var(--accent); background:var(--accent); color:#0b1020; font-weight:750; }
+    .knob { display:grid; gap:11px; padding-top:5px; }
+    .knob-heading { display:flex; justify-content:space-between; gap:12px; align-items:baseline; }
+    #depthValue { color:var(--text); font-variant-numeric:tabular-nums; }
+    input[type=range] { width:100%; accent-color:var(--accent); cursor:ew-resize; }
+    @media (max-width:480px) { body { padding:12px; } .time-inputs { grid-template-columns:1fr; } .buttons { flex-direction:column; } }
   </style>
 </head>
-
 <body>
-  <main class="app">
+  <main>
     <h1>Deep Time Timer</h1>
-    <p class="description">
-      Start the countdown, then move the depth knob to reveal more moving digits.
-    </p>
+    <p class="intro">Move the knob to extend the seconds field. Each new digit is an odometer wheel that changes ten times more slowly than the one before it.</p>
 
-    <section class="timer" aria-live="polite">
-      <div id="display">
-        <span id="minutesDisplay">00</span>:<span id="deepDigits">00</span>:<span id="secondsDisplay">00</span>
-      </div>
+    <section class="timer" aria-label="Countdown timer" aria-live="off">
+      <div id="display"><span id="minutesDisplay">00</span>:<span id="secondsDisplay">00</span><span id="deepDigits"></span>:<span id="centisecondsDisplay">00</span></div>
+      <div class="legend">MM : SS<span aria-hidden="true">…</span> : CS</div>
     </section>
 
-    <section class="controls">
+    <section class="controls" aria-label="Timer controls">
       <div class="time-inputs">
-        <label>
-          Minutes
-          <input id="minutesInput" type="number" min="0" max="999" value="1" />
-        </label>
-
-        <label>
-          Seconds
-          <input id="secondsInput" type="number" min="0" max="59" value="0" />
-        </label>
+        <label>Minutes <input id="minutesInput" type="number" min="0" max="999" value="1" inputmode="numeric"></label>
+        <label>Seconds <input id="secondsInput" type="number" min="0" max="59" value="0" inputmode="numeric"></label>
       </div>
-
       <div class="buttons">
         <button id="startButton" class="primary" type="button">Start</button>
         <button id="resetButton" type="button">Reset</button>
       </div>
-
-      <div class="knob-section">
-        <div class="knob-label">
-          <label for="depthKnob">Depth knob</label>
-          <span id="depthValue">2 digits</span>
-        </div>
-
-        <input
-          id="depthKnob"
-          type="range"
-          min="2"
-          max="18"
-          value="2"
-          step="1"
-        />
-
-        <p class="hint">
-          Slide right to change 00:00:00 into 00:000:00, 00:0000:00, and deeper.
-        </p>
+      <div class="knob">
+        <div class="knob-heading"><label for="depthKnob">Deep-digit knob</label><output id="depthValue" for="depthKnob">0 extra digits</output></div>
+        <input id="depthKnob" type="range" min="0" max="12" value="0" step="1">
+        <p class="hint">For example, two extra digits create <strong>00:2936:23</strong>. The first new wheel turns every 10 seconds; every wheel to its right turns 10× more slowly. They use the same elapsed-time clock, so their values remain correct when you pause and resume.</p>
       </div>
     </section>
   </main>
 
   <script>
-    const minutesInput = document.getElementById("minutesInput");
-    const secondsInput = document.getElementById("secondsInput");
-    const minutesDisplay = document.getElementById("minutesDisplay");
-    const secondsDisplay = document.getElementById("secondsDisplay");
-    const deepDigits = document.getElementById("deepDigits");
-    const depthKnob = document.getElementById("depthKnob");
-    const depthValue = document.getElementById("depthValue");
-    const startButton = document.getElementById("startButton");
-    const resetButton = document.getElementById("resetButton");
+    const $ = (id) => document.getElementById(id);
+    const minutesInput = $("minutesInput");
+    const secondsInput = $("secondsInput");
+    const minutesDisplay = $("minutesDisplay");
+    const secondsDisplay = $("secondsDisplay");
+    const centisecondsDisplay = $("centisecondsDisplay");
+    const deepDigits = $("deepDigits");
+    const depthKnob = $("depthKnob");
+    const depthValue = $("depthValue");
+    const startButton = $("startButton");
+    const resetButton = $("resetButton");
 
-    let totalMilliseconds = 60_000;
+    let remainingMilliseconds = 60_000;
     let endTime = 0;
-    let animationFrame = null;
+    let startedAt = 0;
+    let elapsedBeforeStart = 0;
+    let animationFrame = 0;
     let running = false;
-    let lastRenderedTime = performance.now();
 
-    function pad(value, length = 2) {
-      return String(value).padStart(length, "0");
+    const pad = (value) => String(value).padStart(2, "0");
+
+    function inputMilliseconds() {
+      const minutes = Math.min(999, Math.max(0, Math.floor(Number(minutesInput.value) || 0)));
+      const seconds = Math.min(59, Math.max(0, Math.floor(Number(secondsInput.value) || 0)));
+      return (minutes * 60 + seconds) * 1_000;
     }
 
-    function readInputTime() {
-      const minutes = Math.max(0, Number(minutesInput.value) || 0);
-      const seconds = Math.min(59, Math.max(0, Number(secondsInput.value) || 0));
-      return Math.round((minutes * 60 + seconds) * 1000);
+    // All deep wheels are read from one elapsed-time odometer. The wheel nearest
+    // the seconds changes every 10 seconds; each wheel to the right has a 10x
+    // longer period, so the displayed digits always have a consistent position.
+    function slowDigits(elapsedMilliseconds, count) {
+      return Array.from({ length: count }, (_, index) => {
+        const interval = 10_000 * (10 ** index);
+        return Math.floor(elapsedMilliseconds / interval) % 10;
+      }).join("");
     }
 
-    function createDeepNumber(now) {
+    function render(remaining = remainingMilliseconds, elapsed = elapsedBeforeStart) {
+      const safeRemaining = Math.max(0, remaining);
+      const wholeSeconds = Math.floor(safeRemaining / 1_000);
+      minutesDisplay.textContent = pad(Math.floor(wholeSeconds / 60));
+      secondsDisplay.textContent = pad(wholeSeconds % 60);
+      centisecondsDisplay.textContent = pad(Math.floor((safeRemaining % 1_000) / 10));
       const depth = Number(depthKnob.value);
-
-      // The first two digits behave like a fast-moving base value.
-      // Extra digits use the high-resolution animation clock.
-      const movingNumber = Math.floor(now * Math.pow(10, Math.max(0, depth - 3)));
-      return String(movingNumber).padStart(depth, "0").slice(-depth);
-    }
-
-    function render(remainingMilliseconds, now = performance.now()) {
-      const safeRemaining = Math.max(0, remainingMilliseconds);
-      const totalSeconds = Math.ceil(safeRemaining / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-
-      minutesDisplay.textContent = pad(minutes);
-      secondsDisplay.textContent = pad(seconds);
-      deepDigits.textContent = createDeepNumber(now);
-
-      depthValue.textContent =
-        depthKnob.value + (depthKnob.value === "1" ? " digit" : " digits");
+      deepDigits.textContent = slowDigits(elapsed, depth);
+      depthValue.textContent = `${depth} extra digit${depth === 1 ? "" : "s"}`;
     }
 
     function tick(now) {
       if (!running) return;
-
-      const remaining = endTime - performance.now();
-      lastRenderedTime = now;
-      render(remaining, now);
-
-      if (remaining <= 0) {
+      remainingMilliseconds = Math.max(0, endTime - now);
+      const elapsed = elapsedBeforeStart + (now - startedAt);
+      render(remainingMilliseconds, elapsed);
+      if (remainingMilliseconds === 0) {
+        elapsedBeforeStart = elapsed;
         running = false;
-        totalMilliseconds = 0;
         startButton.textContent = "Start";
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
+        animationFrame = 0;
         return;
       }
-
       animationFrame = requestAnimationFrame(tick);
     }
 
     function startOrPause() {
       if (running) {
-        totalMilliseconds = Math.max(0, endTime - performance.now());
+        const now = performance.now();
+        remainingMilliseconds = Math.max(0, endTime - now);
+        elapsedBeforeStart += now - startedAt;
         running = false;
+        cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
         startButton.textContent = "Resume";
-
-        if (animationFrame) {
-          cancelAnimationFrame(animationFrame);
-          animationFrame = null;
-        }
-
-        render(totalMilliseconds, lastRenderedTime);
+        render();
         return;
       }
-
-      if (totalMilliseconds <= 0) {
-        totalMilliseconds = readInputTime();
-      }
-
-      if (totalMilliseconds <= 0) return;
-
-      endTime = performance.now() + totalMilliseconds;
+      if (remainingMilliseconds === 0) return;
+      startedAt = performance.now();
+      endTime = startedAt + remainingMilliseconds;
       running = true;
       startButton.textContent = "Pause";
       animationFrame = requestAnimationFrame(tick);
     }
 
     function resetTimer() {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
       running = false;
-
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-      }
-
-      totalMilliseconds = readInputTime();
+      remainingMilliseconds = inputMilliseconds();
+      elapsedBeforeStart = 0;
       startButton.textContent = "Start";
-      render(totalMilliseconds);
+      render();
     }
 
-    function updateFromInputs() {
-      if (!running) {
-        totalMilliseconds = readInputTime();
-        render(totalMilliseconds);
-      }
-    }
-
+    function updateFromInputs() { if (!running) resetTimer(); }
     startButton.addEventListener("click", startOrPause);
     resetButton.addEventListener("click", resetTimer);
     minutesInput.addEventListener("input", updateFromInputs);
     secondsInput.addEventListener("input", updateFromInputs);
-    depthKnob.addEventListener("input", () => {
-      render(
-        running ? Math.max(0, endTime - performance.now()) : totalMilliseconds
-      );
-    });
-
+    depthKnob.addEventListener("input", () => render(running ? endTime - performance.now() : remainingMilliseconds, running ? elapsedBeforeStart + performance.now() - startedAt : elapsedBeforeStart));
     resetTimer();
   </script>
 </body>
 </html>
-'''
-
-path = Path("/mnt/data/deep-time-timer.html")
-path.write_text(html, encoding="utf-8")
-print(path)
