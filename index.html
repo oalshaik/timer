@@ -42,7 +42,7 @@
 
     <section class="controls" aria-label="Timer controls">
       <div class="time-inputs">
-        <label>Minutes <input id="minutesInput" type="number" min="0" max="999" value="0" inputmode="numeric"></label>
+        <label>Minutes <input id="minutesInput" type="number" min="0" max="999" value="1" inputmode="numeric"></label>
         <label>Seconds <input id="secondsInput" type="number" min="0" max="59" value="0" inputmode="numeric"></label>
       </div>
       <div class="buttons">
@@ -52,7 +52,7 @@
       <div class="knob">
         <div class="knob-heading"><label for="depthKnob">Deep-digit knob</label><output id="depthValue" for="depthKnob">0 extra digits</output></div>
         <input id="depthKnob" type="range" min="0" max="12" value="0" step="1">
-        <p class="hint">For example, two extra digits create <strong>00:2936:23</strong>. From left to right, deep digits turn every 10 seconds, 100 seconds, 1,000 seconds, and so on.</p>
+        <p class="hint">For example, two extra digits create <strong>00:2936:23</strong>. The first new wheel turns every 10 seconds; every wheel to its right turns 10× more slowly. They use the same elapsed-time clock, so their values remain correct when you pause and resume.</p>
       </div>
     </section>
   </main>
@@ -85,8 +85,9 @@
       return (minutes * 60 + seconds) * 1_000;
     }
 
-    // Digit n is floor(elapsed / (10 seconds * 10^(n - 1))) mod 10.
-    // Therefore every wheel to the right advances exactly ten times more slowly.
+    // All deep wheels are read from one elapsed-time odometer. The wheel nearest
+    // the seconds changes every 10 seconds; each wheel to the right has a 10x
+    // longer period, so the displayed digits always have a consistent position.
     function slowDigits(elapsedMilliseconds, count) {
       return Array.from({ length: count }, (_, index) => {
         const interval = 10_000 * (10 ** index);
