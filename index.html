@@ -33,11 +33,11 @@
 <body>
   <main>
     <h1>Deep Time Timer</h1>
-    <p class="intro">Move the knob to zoom into the current second. The inserted binary digits and milliseconds are synchronized views of the exact same instant.</p>
+    <p class="intro">Zoom into one continuous time value. The decimal point after seconds is hidden, so every added digit reveals a real decimal place that was already there.</p>
 
     <section class="timer" aria-label="Countdown timer" aria-live="off">
-      <div id="display"><span id="minutesDisplay">00</span>:<span id="secondsDisplay">00</span><span id="deepDigits"></span>:<span id="millisecondsDisplay">000</span></div>
-      <div class="legend">MM : SS<span aria-hidden="true">[binary zoom]</span> : MS</div>
+      <div id="display"><span id="minutesDisplay">00</span>:<span id="secondsDisplay">00</span><span id="deepDigits"></span></div>
+      <div class="legend">MM : SS<span aria-hidden="true">[hidden decimal places]</span></div>
     </section>
 
     <section class="controls" aria-label="Timer controls">
@@ -50,9 +50,9 @@
         <button id="resetButton" type="button">Reset</button>
       </div>
       <div class="knob">
-        <div class="knob-heading"><label for="depthKnob">Deep-digit knob</label><output id="depthValue" for="depthKnob">0 extra digits</output></div>
-        <input id="depthKnob" type="range" min="0" max="12" value="0" step="1">
-        <p class="hint">One digit splits the current second into halves: 0 then 1. Two digits split it into quarters: 00, 01, 10, 11. Each extra digit doubles the resolution of this same fraction of a second.</p>
+        <div class="knob-heading"><label for="depthKnob">Decimal zoom</label><output id="depthValue" for="depthKnob">0 decimal places</output></div>
+        <input id="depthKnob" type="range" min="0" max="9" value="0" step="1">
+        <p class="hint">At depth 3, <strong>00:59856</strong> means 59.856 seconds. Each step reveals one more decimal digit from the same timer value: 59.8, 59.85, 59.856…</p>
       </div>
     </section>
   </main>
@@ -63,7 +63,6 @@
     const secondsInput = $("secondsInput");
     const minutesDisplay = $("minutesDisplay");
     const secondsDisplay = $("secondsDisplay");
-    const millisecondsDisplay = $("millisecondsDisplay");
     const deepDigits = $("deepDigits");
     const depthKnob = $("depthKnob");
     const depthValue = $("depthValue");
@@ -83,13 +82,13 @@
       return (minutes * 60 + seconds) * 1_000;
     }
 
-    function getDepthDigits(timeMilliseconds, depth) {
+    function getDecimalDigits(timeMilliseconds, depth) {
       if (depth === 0) return "";
 
-      const millisecondsInsideSecond = ((Math.floor(timeMilliseconds) % 1_000) + 1_000) % 1_000;
+      const millisecondsInsideSecond = ((timeMilliseconds % 1_000) + 1_000) % 1_000;
       const fraction = millisecondsInsideSecond / 1_000;
-      const section = Math.floor(fraction * (2 ** depth));
-      return section.toString(2).padStart(depth, "0");
+      const digits = Math.floor(fraction * (10 ** depth));
+      return String(digits).padStart(depth, "0");
     }
 
     function render(remaining = remainingMilliseconds) {
@@ -97,10 +96,9 @@
       const wholeSeconds = Math.floor(safeRemaining / 1_000);
       minutesDisplay.textContent = pad(Math.floor(wholeSeconds / 60));
       secondsDisplay.textContent = pad(wholeSeconds % 60);
-      millisecondsDisplay.textContent = pad(Math.floor(safeRemaining % 1_000), 3);
       const depth = Number(depthKnob.value);
-      deepDigits.textContent = getDepthDigits(safeRemaining, depth);
-      depthValue.textContent = `${depth} binary digit${depth === 1 ? "" : "s"}`;
+      deepDigits.textContent = getDecimalDigits(safeRemaining, depth);
+      depthValue.textContent = `${depth} decimal place${depth === 1 ? "" : "s"}`;
     }
 
     function tick(now) {
