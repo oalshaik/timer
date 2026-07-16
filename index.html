@@ -52,7 +52,7 @@
       <div class="knob">
         <div class="knob-heading"><label for="depthKnob">Deep-digit knob</label><output id="depthValue" for="depthKnob">0 extra digits</output></div>
         <input id="depthKnob" type="range" min="0" max="12" value="0" step="1">
-        <p class="hint">For example, two extra digits create <strong>00:2936:23</strong>. The first new wheel turns every 10 seconds; every wheel to its right turns 10× more slowly. They use the same elapsed-time clock, so their values remain correct when you pause and resume.</p>
+        <p class="hint">For example, two extra digits create <strong>00:2936:23</strong>. The first new wheel turns every second (slower than centiseconds); every wheel to its right turns 10× more slowly. They use the same elapsed-time clock, so their values remain correct when you pause and resume.</p>
       </div>
     </section>
   </main>
@@ -86,11 +86,12 @@
     }
 
     // All deep wheels are read from one elapsed-time odometer. The wheel nearest
-    // the seconds changes every 10 seconds; each wheel to the right has a 10x
-    // longer period, so the displayed digits always have a consistent position.
+    // the seconds changes every second (after the two centisecond digits); each
+    // wheel to the right has a 10x longer period. Thus 00:27[30]:24 means the
+    // first deep wheel has reached 3 seconds and the next wheel is at 0 tens.
     function slowDigits(elapsedMilliseconds, count) {
       return Array.from({ length: count }, (_, index) => {
-        const interval = 10_000 * (10 ** index);
+        const interval = 1_000 * (10 ** index);
         return Math.floor(elapsedMilliseconds / interval) % 10;
       }).join("");
     }
